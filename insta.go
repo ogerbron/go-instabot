@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 	"time"
 	"unsafe"
@@ -18,8 +19,6 @@ import (
 
 // Storing user in session
 var checkedUser = make(map[string]bool)
-
-var insta *goinsta.Instagram
 
 // login will try to reload a previous session, and will create a new one if it can't
 func login() {
@@ -76,13 +75,13 @@ func containsUser(slice []goinsta.User, user goinsta.User) bool {
 	return false
 }
 
-func getInputf(format string, args ...interface{}) string {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf(format, args...)
-	input, err := reader.ReadString('\n')
-	check(err)
-	return strings.TrimSpace(input)
-}
+// func getInputf(format string, args ...interface{}) string {
+// 	reader := bufio.NewReader(os.Stdin)
+// 	fmt.Printf(format, args...)
+// 	input, err := reader.ReadString('\n')
+// 	check(err)
+// 	return strings.TrimSpace(input)
+// }
 
 // Same, with strings
 func containsString(slice []string, user string) bool {
@@ -94,25 +93,21 @@ func containsString(slice []string, user string) bool {
 	return false
 }
 
-func (myInstabot MyInstabot) syncFollowers() {
+func (myInstabot MyInstabot) getDiffFollowersFollowing() []goinsta.User {
 	following := myInstabot.Insta.Account.Following()
 	followers := myInstabot.Insta.Account.Followers()
 
 	var followerUsers []goinsta.User
 	var followingUsers []goinsta.User
+	var users []goinsta.User
 
 	for following.Next() {
-		for _, user := range following.Users {
-			followingUsers = append(followingUsers, user)
-		}
+		followingUsers = append(followingUsers, following.Users...)
 	}
 	for followers.Next() {
-		for _, user := range followers.Users {
-			followerUsers = append(followerUsers, user)
-		}
+		followerUsers = append(followerUsers, followers.Users...)
 	}
 
-	var users []goinsta.User
 	for _, user := range followingUsers {
 		// Skip whitelisted users.
 		if containsString(userWhitelist, user.Username) {
@@ -123,33 +118,66 @@ func (myInstabot MyInstabot) syncFollowers() {
 			users = append(users, user)
 		}
 	}
+
+	return users
+}
+
+func (myInstabot MyInstabot) displayUsersNotFollowingBack() {
+	users := myInstabot.getDiffFollowersFollowing()
+
+	var usernames []string
+	fmt.Printf("The following users are not following you back:")
+	for _, user := range users {
+		usernames = append(usernames, user.Username)
+	}
+	sort.Strings(usernames)
+	for _, user := range usernames {
+		fmt.Printf("%s\n", user)
+	}
+}
+
+func (myInstabot MyInstabot) unfollowUsers() {
+	users := myInstabot.getDiffFollowersFollowing()
+
 	if len(users) == 0 {
+		fmt.Printf("All in syncing, ending now")
 		return
 	}
+
 	fmt.Printf("\n%d users are not following you back!\n", len(users))
-	answer := getInput("Do you want to review these users ? [yN]")
-	if answer != "y" {
-		fmt.Println("Not unfollowing.")
-		os.Exit(0)
+	fmt.Println("If you want to review these users, use -display")
+
+	fmt.Printf("We are going to unfollow a max of %d users\n", unfollowLimit)
+
+	fmt.Printf("We are going to unfollow these users\n")
+	for i, user := range users {
+		fmt.Printf("%d. %s\n", i, user.Username)
+		if i == unfollowLimit - 1 {
+			break
+		}
+		
+	}
+	answerUnfollow := getInput("Start unfollowing? [yN]")
+
+	if answerUnfollow != "y" {
+		return
 	}
 
-	answerUnfollowAll := getInput("Unfollow everyone ? [yN]")
-
-	for _, user := range users {
-		if answerUnfollowAll != "y" {
-			answerUserUnfollow := getInputf("Unfollow %s ? [yN]", user.Username)
-			if answerUserUnfollow != "y" {
-				userWhitelist = append(userWhitelist, user.Username)
-				continue
-			}
-		}
-
+	for i, user := range users {
 		userBlacklist = append(userBlacklist, user.Username)
 
 		if !dev {
-			user.Unfollow()
+			fmt.Printf("Unfollowing %s\n", user.Username)
+			err := user.Unfollow()
+			if err != nil {
+				fmt.Printf("In unfollowUsers: %s", err)
+			}
 		}
-		time.Sleep(6 * time.Second)
+		randomTimeSleep(4, 20)
+
+		if i == unfollowLimit - 1 {
+			break
+		}
 	}
 }
 
@@ -161,7 +189,10 @@ func (myInstabot MyInstabot) followUser(user *goinsta.User) {
 	// If not following already
 	if !user.Friendship.Following {
 		if !dev {
-			user.Follow()
+			err := user.Follow()
+			if err != nil {
+				fmt.Printf("In followUser: %s", err)
+			}
 		}
 		log.Println("Followed")
 		numFollowed++
@@ -195,7 +226,10 @@ func (myInstabot MyInstabot) likeImage(image goinsta.Item) {
 	log.Println("Liking the picture")
 	if !image.HasLiked {
 		if !dev {
-			image.Like()
+			err := image.Like()
+			if err != nil {
+				fmt.Printf("In unfollowUsers: %s", err)
+			}
 		}
 		log.Println("Liked")
 		numLiked++
@@ -287,9 +321,7 @@ func (myInstabot MyInstabot) goThrough(images *goinsta.FeedTag) {
 
 		var followingUsers []goinsta.User
 		for following.Next() {
-			for _, user := range following.Users {
-				followingUsers = append(followingUsers, user)
-			}
+			followingUsers = append(followingUsers, following.Users...)
 		}
 
 		for _, user := range followingUsers {
@@ -335,10 +367,16 @@ func (myInstabot MyInstabot) commentImage(image goinsta.Item) {
 			item := reflect.New(reflect.TypeOf(image))
 			item.Elem().Set(reflect.ValueOf(image))
 			rf.Set(item)
-			newComments.Add(text)
+			err := newComments.Add(text)
+			if err != nil {
+				fmt.Printf("In unfollowUsers: %s", err)
+			}
 			// end hack!
 		} else {
-			comments.Add(text)
+			err := comments.Add(text)
+			if err != nil {
+				fmt.Printf("In unfollowUsers: %s", err)
+			}
 		}
 	}
 	log.Println("Commented " + text)

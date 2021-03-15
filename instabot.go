@@ -16,8 +16,10 @@ func main() {
 	getConfig()
 	// Tries to login
 	login()
-	if unfollow {
-		instabot.syncFollowers()
+	if display {
+		instabot.displayUsersNotFollowingBack()
+	} else if unfollow {
+		instabot.unfollowUsers()
 	} else if run {
 		// Loop through tags ; follows, likes, and comments, according to the config file
 		instabot.loopTags()

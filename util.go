@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net/smtp"
 	"os"
 	"strings"
@@ -17,11 +18,17 @@ var (
 	// Whether we are in development mode or not
 	dev bool
 
+	// Whether to display users that are not following you back
+	display bool 
+
 	// Whether we want an email to be sent when the script ends / crashes
 	nomail bool
 
 	// Whether we want to launch the unfollow mode
 	unfollow bool
+
+	// The max number of users to unfollow
+	unfollowLimit int
 
 	// Acut
 	run bool
@@ -85,7 +92,9 @@ func check(err error) {
 // Parses the options given to the script
 func parseOptions() {
 	flag.BoolVar(&run, "run", false, "Use this option to follow, like and comment")
-	flag.BoolVar(&unfollow, "sync", false, "Use this option to unfollow those who are not following back")
+	flag.BoolVar(&unfollow, "unfollow", false, "Use this option to unfollow those who are not following back")
+	flag.IntVar(&unfollowLimit, "unfollowlimit", 10, "Use this option to set the max users to unfollow (use with -unfollow")
+	flag.BoolVar(&display, "display", false, "Use this option to display those who are not following back")
 	flag.BoolVar(&nomail, "nomail", false, "Use this option to disable the email notifications")
 	flag.BoolVar(&dev, "dev", false, "Use this option to use the script in development mode : nothing will be done for real")
 	flag.BoolVar(&logs, "logs", false, "Use this option to enable the logfile")
@@ -238,4 +247,9 @@ func buildReport() {
 
 	// Sends the report to the email in the config file, if the option is enabled
 	send(reportAsString, true)
+}
+
+func randomTimeSleep(min, max int) {
+    randomSleepTime := rand.Intn(max - min + 1) + min
+    time.Sleep(time.Duration(randomSleepTime) * time.Second)
 }
