@@ -157,10 +157,11 @@ func (myInstabot MyInstabot) unfollowUsers() {
 		}
 		
 	}
-	answerUnfollow := getInput("Start unfollowing? [yN]")
-
-	if answerUnfollow != "y" {
-		return
+	
+	if !forceUnfollow {
+		if getInput("Start unfollowing? [yN]") != "y" {
+			return
+		}
 	}
 
 	for i, user := range users {
@@ -346,7 +347,7 @@ func (myInstabot MyInstabot) goThrough(images *goinsta.FeedTag) {
 		log.Printf("%s done\n\n", userInfo.Username)
 
 		// This is to avoid the temporary ban by Instagram
-		time.Sleep(20 * time.Second)
+		randomTimeSleep(15, 35)
 	}
 }
 
