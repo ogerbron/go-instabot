@@ -19,7 +19,19 @@ var (
 	dev bool
 
 	// Whether to display users that are not following you back
-	display bool 
+	displayNotFollowingYouBack bool
+
+	// Whether to display users that you are not following back
+	displayYouDontFollowBack bool
+
+	// Whether we want to launch the unfollow mode
+	follow bool
+
+	// The max number of users to unfollow
+	followLimit int
+
+	// Auto approve following users
+	forceFollow bool
 
 	// Auto approve unfollowing users
 	forceUnfollow bool
@@ -95,10 +107,14 @@ func check(err error) {
 // Parses the options given to the script
 func parseOptions() {
 	flag.BoolVar(&run, "run", false, "Use this option to follow, like and comment")
+	flag.BoolVar(&forceFollow, "forcefollow", false, "Use this option to auto approve following")
+	flag.BoolVar(&follow, "follow", false, "Use this option to follow those who you don't follow back")
+	flag.IntVar(&followLimit, "followlimit", 10, "Use this option to set the max users to follow (use with -follow)")
 	flag.BoolVar(&forceUnfollow, "forceunfollow", false, "Use this option to auto approve unfollowing")
 	flag.BoolVar(&unfollow, "unfollow", false, "Use this option to unfollow those who are not following back")
 	flag.IntVar(&unfollowLimit, "unfollowlimit", 10, "Use this option to set the max users to unfollow (use with -unfollow)")
-	flag.BoolVar(&display, "display", false, "Use this option to display those who are not following back")
+	flag.BoolVar(&displayNotFollowingYouBack, "displaynotfollowingyouback", false, "Use this option to display those who are not following back")
+	flag.BoolVar(&displayYouDontFollowBack, "displayyoudontfollowback", false, "Use this option to display those you are not following back")
 	flag.BoolVar(&nomail, "nomail", false, "Use this option to disable the email notifications")
 	flag.BoolVar(&dev, "dev", false, "Use this option to use the script in development mode : nothing will be done for real")
 	flag.BoolVar(&logs, "logs", false, "Use this option to enable the logfile")

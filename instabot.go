@@ -16,8 +16,10 @@ func main() {
 	getConfig()
 	// Tries to login
 	login()
-	if display {
+	if displayNotFollowingYouBack {
 		instabot.displayUsersNotFollowingBack()
+	} else if displayYouDontFollowBack {
+		instabot.displayUsersYouDontFollowBack()
 	} else if unfollow {
 		instabot.unfollowUsers()
 	} else if run {

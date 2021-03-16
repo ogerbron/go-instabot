@@ -93,6 +93,7 @@ func containsString(slice []string, user string) bool {
 	return false
 }
 
+// Get the users YOU are following but that are not following you back
 func (myInstabot MyInstabot) getDiffFollowersFollowing() []goinsta.User {
 	following := myInstabot.Insta.Account.Following()
 	followers := myInstabot.Insta.Account.Followers()
@@ -122,11 +123,55 @@ func (myInstabot MyInstabot) getDiffFollowersFollowing() []goinsta.User {
 	return users
 }
 
+// Get the users following YOU but that your are not following back
+func (myInstabot MyInstabot) getDiffFollowingFollowers() []goinsta.User {
+	following := myInstabot.Insta.Account.Following()
+	followers := myInstabot.Insta.Account.Followers()
+
+	var followerUsers []goinsta.User
+	var followingUsers []goinsta.User
+	var users []goinsta.User
+
+	for following.Next() {
+		followingUsers = append(followingUsers, following.Users...)
+	}
+	for followers.Next() {
+		followerUsers = append(followerUsers, followers.Users...)
+	}
+
+	for _, user := range followerUsers {
+		// Skip whitelisted users.
+		if containsString(userWhitelist, user.Username) {
+			continue
+		}
+
+		if !containsUser(followingUsers, user) {
+			users = append(users, user)
+		}
+	}
+
+	return users
+}
+
 func (myInstabot MyInstabot) displayUsersNotFollowingBack() {
 	users := myInstabot.getDiffFollowersFollowing()
 
 	var usernames []string
-	fmt.Printf("The following users are not following you back:")
+	fmt.Println("The following users are not following you back:")
+	for _, user := range users {
+		usernames = append(usernames, user.Username)
+	}
+	sort.Strings(usernames)
+	for _, user := range usernames {
+		fmt.Printf("%s\n", user)
+	}
+}
+
+func (myInstabot MyInstabot) displayUsersYouDontFollowBack() {
+	users := myInstabot.getDiffFollowingFollowers()
+
+	var usernames []string
+	fmt.Println("You don't follow back the following users:")
 	for _, user := range users {
 		usernames = append(usernames, user.Username)
 	}
@@ -160,6 +205,52 @@ func (myInstabot MyInstabot) unfollowUsers() {
 	
 	if !forceUnfollow {
 		if getInput("Start unfollowing? [yN]") != "y" {
+			return
+		}
+	}
+
+	for i, user := range users {
+		userBlacklist = append(userBlacklist, user.Username)
+
+		if !dev {
+			fmt.Printf("Unfollowing %s\n", user.Username)
+			err := user.Unfollow()
+			if err != nil {
+				fmt.Printf("In unfollowUsers: %s", err)
+			}
+		}
+		randomTimeSleep(4, 20)
+
+		if i == unfollowLimit - 1 {
+			break
+		}
+	}
+}
+
+func (myInstabot MyInstabot) followUsers() {
+	users := myInstabot.getDiffFollowingFollowers()
+
+	if len(users) == 0 {
+		fmt.Printf("All in syncing, ending now")
+		return
+	}
+
+	fmt.Printf("\n%d users follow you but you don't follow them back!\n", len(users))
+	// fmt.Println("If you want to review these users, use -display")
+
+	fmt.Printf("We are going to follow a max of %d users\n", followLimit)
+
+	fmt.Printf("We are going to follow these users\n")
+	for i, user := range users {
+		fmt.Printf("%d. %s\n", i, user.Username)
+		if i == followLimit - 1 {
+			break
+		}
+		
+	}
+	
+	if !forceFollow {
+		if getInput("Start following? [yN]") != "y" {
 			return
 		}
 	}
