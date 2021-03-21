@@ -197,12 +197,12 @@ func (myInstabot MyInstabot) unfollowUsers() {
 	fmt.Printf("We are going to unfollow these users\n")
 	for i, user := range users {
 		fmt.Printf("%d. %s\n", i, user.Username)
-		if i == unfollowLimit - 1 {
+		if i == unfollowLimit-1 {
 			break
 		}
-		
+
 	}
-	
+
 	if !forceUnfollow {
 		if getInput("Start unfollowing? [yN]") != "y" {
 			return
@@ -219,9 +219,9 @@ func (myInstabot MyInstabot) unfollowUsers() {
 				fmt.Printf("In unfollowUsers: %s", err)
 			}
 		}
-		randomTimeSleep(4, 20)
+		randomTimeSleep(minSleepDuration, maxSleepDuration)
 
-		if i == unfollowLimit - 1 {
+		if i == unfollowLimit-1 {
 			break
 		}
 	}
@@ -243,12 +243,12 @@ func (myInstabot MyInstabot) followUsers() {
 	fmt.Printf("We are going to follow these users\n")
 	for i, user := range users {
 		fmt.Printf("%d. %s\n", i, user.Username)
-		if i == followLimit - 1 {
+		if i == followLimit-1 {
 			break
 		}
-		
+
 	}
-	
+
 	if !forceFollow {
 		if getInput("Start following? [yN]") != "y" {
 			return
@@ -265,9 +265,9 @@ func (myInstabot MyInstabot) followUsers() {
 				fmt.Printf("In unfollowUsers: %s", err)
 			}
 		}
-		randomTimeSleep(4, 20)
+		randomTimeSleep(minSleepDuration, maxSleepDuration)
 
-		if i == unfollowLimit - 1 {
+		if i == unfollowLimit-1 {
 			break
 		}
 	}
@@ -438,7 +438,7 @@ func (myInstabot MyInstabot) goThrough(images *goinsta.FeedTag) {
 		log.Printf("%s done\n\n", userInfo.Username)
 
 		// This is to avoid the temporary ban by Instagram
-		randomTimeSleep(15, 35)
+		randomTimeSleep(minSleepDuration, maxSleepDuration)
 	}
 }
 

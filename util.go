@@ -39,6 +39,14 @@ var (
 	// Whether we want an email to be sent when the script ends / crashes
 	nomail bool
 
+	// Max duration (second) to wait for between actions (must be higher than min duration)
+	// The program will take a random duration between min and max after each ation
+	maxSleepDuration int
+
+	// Min duration (second) to wait for between actions (must be lower than max duration)
+	// The program will take a random duration between min and max after each ation
+	minSleepDuration int
+
 	// Whether we want to launch the unfollow mode
 	unfollow bool
 
@@ -115,12 +123,18 @@ func parseOptions() {
 	flag.IntVar(&unfollowLimit, "unfollowlimit", 10, "Use this option to set the max users to unfollow (use with -unfollow)")
 	flag.BoolVar(&displayNotFollowingYouBack, "displaynotfollowingyouback", false, "Use this option to display those who are not following back")
 	flag.BoolVar(&displayYouDontFollowBack, "displayyoudontfollowback", false, "Use this option to display those you are not following back")
+	flag.IntVar(&maxSleepDuration, "maxsleepduration", 35, "Use this option to set the max duration to wait between actions")
+	flag.IntVar(&minSleepDuration, "minsleepduration", 10, "Use this option to set the min duration to wait between actions")
 	flag.BoolVar(&nomail, "nomail", false, "Use this option to disable the email notifications")
 	flag.BoolVar(&dev, "dev", false, "Use this option to use the script in development mode : nothing will be done for real")
 	flag.BoolVar(&logs, "logs", false, "Use this option to enable the logfile")
 	flag.BoolVar(&noduplicate, "noduplicate", false, "Use this option to skip following, liking and commenting same user in this session")
 
 	flag.Parse()
+
+	if minSleepDuration > maxSleepDuration {
+		log.Fatalf("minsleepduration must be lower than maxsleepduration")
+	}
 
 	// -logs enables the log file
 	if logs {
