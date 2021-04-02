@@ -1,6 +1,11 @@
 package main
 
-import "github.com/ahmdrz/goinsta/v2"
+import (
+	"strings"
+	"time"
+
+	"github.com/ahmdrz/goinsta/v2"
+)
 
 // MyInstabot is a wrapper around everything
 type MyInstabot struct {
@@ -20,6 +25,17 @@ func main() {
 		instabot.displayUsersNotFollowingBack()
 	} else if displayYouDontFollowBack {
 		instabot.displayUsersYouDontFollowBack()
+	} else if followUser {
+		usersToFollow := strings.Split(followUserList, ",")
+		for _, user := range usersToFollow {
+			var instaUser *goinsta.User
+			err := retry(10, 20*time.Second, func() (err error) {
+				instaUser, err = instabot.Insta.Profiles.ByName(user)
+				return
+			})
+			check(err)
+			instabot.followUser(instaUser)
+		}
 	} else if unfollow {
 		instabot.unfollowUsers()
 	} else if run {

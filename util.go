@@ -24,8 +24,14 @@ var (
 	// Whether to display users that you are not following back
 	displayYouDontFollowBack bool
 
-	// Whether we want to launch the unfollow mode
+	// Whether we want to launch the follow mode
 	follow bool
+
+	// Whether we want to launch the unfollow mode
+	followUser bool
+
+	// A comma seperated list of users to follow
+	followUserList string
 
 	// The max number of users to unfollow
 	followLimit int
@@ -116,6 +122,8 @@ func check(err error) {
 func parseOptions() {
 	flag.BoolVar(&run, "run", false, "Use this option to follow, like and comment")
 	flag.BoolVar(&forceFollow, "forcefollow", false, "Use this option to auto approve following")
+	flag.BoolVar(&followUser, "followUser", false, "Use this option to follow a list of users")
+	flag.StringVar(&followUserList, "followUserList", "", "A comma seperated list of users to follow")
 	flag.BoolVar(&follow, "follow", false, "Use this option to follow those who you don't follow back")
 	flag.IntVar(&followLimit, "followlimit", 10, "Use this option to set the max users to follow (use with -follow)")
 	flag.BoolVar(&forceUnfollow, "forceunfollow", false, "Use this option to auto approve unfollowing")
