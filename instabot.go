@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -25,16 +26,41 @@ func main() {
 		instabot.displayUsersNotFollowingBack()
 	} else if displayYouDontFollowBack {
 		instabot.displayUsersYouDontFollowBack()
+	} else if displayFollowers {
+		instabot.displayFollowers()
+	} else if displayFollowing {
+		instabot.displayFollowing()
 	} else if followUser {
 		usersToFollow := strings.Split(followUserList, ",")
-		for _, user := range usersToFollow {
-			var instaUser *goinsta.User
-			err := retry(10, 20*time.Second, func() (err error) {
-				instaUser, err = instabot.Insta.Profiles.ByName(user)
-				return
-			})
-			check(err)
-			instabot.followUser(instaUser)
+		if len(usersToFollow) == 0 {
+			fmt.Printf("The list of users to follow is empty.\n")
+			return
+		} else {
+			for _, user := range usersToFollow {
+				var instaUser *goinsta.User
+				err := retry(10, 20*time.Second, func() (err error) {
+					instaUser, err = instabot.Insta.Profiles.ByName(user)
+					return
+				})
+				check(err)
+				instabot.followUser(instaUser)
+			}
+		}
+	} else if unfollowUsers {
+		usersToUnfollow := strings.Split(unfollowUserList, ",")
+		if len(usersToUnfollow) == 0 {
+			fmt.Printf("The list of users to unfollow is empty.\n")
+			return
+		} else {
+			for _, user := range usersToUnfollow {
+				var instaUser *goinsta.User
+				err := retry(10, 20*time.Second, func() (err error) {
+					instaUser, err = instabot.Insta.Profiles.ByName(user)
+					return
+				})
+				check(err)
+				instabot.unfollowUser(instaUser)
+			}
 		}
 	} else if unfollow {
 		instabot.unfollowUsers()

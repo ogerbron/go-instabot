@@ -18,6 +18,12 @@ var (
 	// Whether we are in development mode or not
 	dev bool
 
+	// Whether to display all the users you are following
+	displayFollowing bool
+
+	// Whether to display all the users following you
+	displayFollowers bool
+	
 	// Whether to display users that are not following you back
 	displayNotFollowingYouBack bool
 
@@ -27,7 +33,7 @@ var (
 	// Whether we want to launch the follow mode
 	follow bool
 
-	// Whether we want to launch the unfollow mode
+	// Use this option to follow a list of users (set list with -followUserList)
 	followUser bool
 
 	// A comma seperated list of users to follow
@@ -58,6 +64,12 @@ var (
 
 	// The max number of users to unfollow
 	unfollowLimit int
+
+	// Whether we want to launch the unfollow mode
+	unfollowUsers bool
+
+	// A comma seperated list of users to unfollow
+	unfollowUserList string
 
 	// Acut
 	run bool
@@ -122,13 +134,17 @@ func check(err error) {
 func parseOptions() {
 	flag.BoolVar(&run, "run", false, "Use this option to follow, like and comment")
 	flag.BoolVar(&forceFollow, "forcefollow", false, "Use this option to auto approve following")
-	flag.BoolVar(&followUser, "followUser", false, "Use this option to follow a list of users")
+	flag.BoolVar(&followUser, "followUser", false, "Use this option to follow a list of users (set list with -followUserList)")
 	flag.StringVar(&followUserList, "followUserList", "", "A comma seperated list of users to follow")
 	flag.BoolVar(&follow, "follow", false, "Use this option to follow those who you don't follow back")
 	flag.IntVar(&followLimit, "followlimit", 10, "Use this option to set the max users to follow (use with -follow)")
 	flag.BoolVar(&forceUnfollow, "forceunfollow", false, "Use this option to auto approve unfollowing")
 	flag.BoolVar(&unfollow, "unfollow", false, "Use this option to unfollow those who are not following back")
 	flag.IntVar(&unfollowLimit, "unfollowlimit", 10, "Use this option to set the max users to unfollow (use with -unfollow)")
+	flag.BoolVar(&unfollowUsers, "unfollowUsers", false, "Use this option to unfollow a list of users (set list with -unfollowUserList)")
+	flag.StringVar(&unfollowUserList, "unfollowUserList", "", "A comma seperated list of users to unfollow")
+	flag.BoolVar(&displayFollowing, "displayFollowing", false, "Whether to display all the users you are following")
+	flag.BoolVar(&displayFollowers, "displayFollowers", false, "Whether to display all the users following you")
 	flag.BoolVar(&displayNotFollowingYouBack, "displaynotfollowingyouback", false, "Use this option to display those who are not following back")
 	flag.BoolVar(&displayYouDontFollowBack, "displayyoudontfollowback", false, "Use this option to display those you are not following back")
 	flag.IntVar(&maxSleepDuration, "maxsleepduration", 35, "Use this option to set the max duration to wait between actions")

@@ -103,10 +103,27 @@ func (myInstabot MyInstabot) getDiffFollowersFollowing() []goinsta.User {
 	var users []goinsta.User
 
 	for following.Next() {
+		err := following.Error()
+		if err != nil && err != goinsta.ErrNoMore {
+			log.Fatal("In getDiffFollowingFollowers:", err)
+		}
 		followingUsers = append(followingUsers, following.Users...)
 	}
+	err := following.Error()
+	if err != nil && err != goinsta.ErrNoMore {
+		log.Fatal(err)
+	}
+
 	for followers.Next() {
+		err := followers.Error()
+		if err != nil && err != goinsta.ErrNoMore {
+			log.Fatal("In getDiffFollowingFollowers:", err)
+		}
 		followerUsers = append(followerUsers, followers.Users...)
+	}
+	err = followers.Error()
+	if err != nil && err != goinsta.ErrNoMore {
+		log.Fatal(err)
 	}
 
 	for _, user := range followingUsers {
@@ -133,15 +150,32 @@ func (myInstabot MyInstabot) getDiffFollowingFollowers() []goinsta.User {
 	var users []goinsta.User
 
 	for following.Next() {
+		err := following.Error()
+		if err != nil && err != goinsta.ErrNoMore {
+			log.Fatal("In getDiffFollowingFollowers:", err)
+		}
 		followingUsers = append(followingUsers, following.Users...)
 	}
+	err := following.Error()
+	if err != nil && err != goinsta.ErrNoMore {
+		log.Fatal(err)
+	}
+
 	for followers.Next() {
+		err := followers.Error()
+		if err != nil && err != goinsta.ErrNoMore {
+			log.Fatal("In getDiffFollowingFollowers:", err)
+		}
 		followerUsers = append(followerUsers, followers.Users...)
+	}
+	err = followers.Error()
+	if err != nil && err != goinsta.ErrNoMore {
+		log.Fatal(err)
 	}
 
 	for _, user := range followerUsers {
-		// Skip whitelisted users.
-		if containsString(userWhitelist, user.Username) {
+		// Skip blacklisted users.
+		if containsString(userBlacklist, user.Username) {
 			continue
 		}
 
@@ -173,6 +207,60 @@ func (myInstabot MyInstabot) displayUsersYouDontFollowBack() {
 	var usernames []string
 	fmt.Println("You don't follow back the following users:")
 	for _, user := range users {
+		usernames = append(usernames, user.Username)
+	}
+	sort.Strings(usernames)
+	for _, user := range usernames {
+		fmt.Printf("%s\n", user)
+	}
+}
+
+func (myInstabot MyInstabot) displayFollowers() {
+	users := myInstabot.Insta.Account.Followers()
+
+	var followers []goinsta.User
+	for users.Next() {
+		err := users.Error()
+		if err != nil && err != goinsta.ErrNoMore {
+			log.Fatal("In displayFollowers:", err)
+		}
+		followers = append(followers, users.Users...)
+	}
+	err := users.Error()
+	if err != nil && err != goinsta.ErrNoMore {
+		log.Fatal(err)
+	}
+
+	var usernames []string
+	fmt.Println("These users are following you:")
+	for _, user := range followers {
+		usernames = append(usernames, user.Username)
+	}
+	sort.Strings(usernames)
+	for _, user := range usernames {
+		fmt.Printf("%s\n", user)
+	}
+}
+
+func (myInstabot MyInstabot) displayFollowing() {
+	users := myInstabot.Insta.Account.Following()
+
+	var following []goinsta.User
+	for users.Next() {
+		err := users.Error()
+		if err != nil && err != goinsta.ErrNoMore {
+			log.Fatal("In displayFollowing:", err)
+		}
+		following = append(following, users.Users...)
+	}
+	err := users.Error()
+	if err != nil && err != goinsta.ErrNoMore {
+		log.Fatal(err)
+	}
+
+	var usernames []string
+	fmt.Println("You follow these users:")
+	for _, user := range following {
 		usernames = append(usernames, user.Username)
 	}
 	sort.Strings(usernames)
@@ -291,6 +379,25 @@ func (myInstabot MyInstabot) followUser(user *goinsta.User) {
 		report[line{tag, "follow"}]++
 	} else {
 		log.Println("Already following " + user.Username)
+	}
+}
+
+// Unfollows a user, if not unfollowed already
+func (myInstabot MyInstabot) unfollowUser(user *goinsta.User) {
+	log.Printf("Unfollowing %s\n", user.Username)
+	err := user.FriendShip()
+	check(err)
+	// If not unfollowing already
+	if !user.Friendship.FollowedBy {
+		if !dev {
+			err := user.Unfollow()
+			if err != nil {
+				fmt.Printf("In unfollowUser: %s", err)
+			}
+		}
+		log.Println("unFollowed")
+	} else {
+		log.Println("Already unfollowed " + user.Username)
 	}
 }
 
